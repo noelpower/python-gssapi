@@ -65,8 +65,21 @@ link_args = link_args.split()
 compile_args = compile_args.split()
 
 # add in the extra workarounds for different include structures
-prefix = get_output('krb5-config gssapi --prefix')
-gssapi_ext_h = os.path.join(prefix, 'include/gssapi/gssapi_ext.h')
+# prefer pkg-config output if it exists
+
+gssapi_ext_h = None
+
+try:
+    subprocess.check_output('which pkg-config',shell=True)
+    include = get_output('pkg-config krb5-gssapi --variable includedir')
+    gssapi_ext_h = os.path.join(include, 'gssapi/gssapi_ext.h')
+except:
+    print ("can't find pkg-config")
+
+if gssapi_ext_h is None:
+    prefix = get_output('krb5-config gssapi --prefix')
+    gssapi_ext_h = os.path.join(prefix, 'include/gssapi/gssapi_ext.h')
+
 if os.path.exists(gssapi_ext_h):
     compile_args.append("-DHAS_GSSAPI_EXT_H")
 
